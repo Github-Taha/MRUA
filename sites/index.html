@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Main Site</title>
+    </head>
+    <body>
+        
+    </body>
+    <script src="global.js"></script>
+    <script>
+
+        (async () => {
+            let token = sessionStorage.getItem("token");
+    
+            if (token) {
+                try {
+                    const response = await fetch(`${AUTH_HOSTNAME}/check-token`, {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authentication": `Bearer ${token}`,
+                            "ngrok-skip-browser-warning": "true"
+                        },
+                    });
+        
+                    const data = await response.json();
+                    console.log("Response from server (user):", data);
+        
+                    if (data.message === "success") {
+                        location.href = "/dashboard.html";
+                    }
+                    else if (data.message === "invalid") {
+                        location.href = "/login.html";
+                    }
+                    
+                } catch (err) {
+                    console.error(`Error: `, err);
+                    return "error";
+                }
+            }
+            else {
+                location.href = "/login.html";
+            }
+        })();
+    </script>
+</html>
