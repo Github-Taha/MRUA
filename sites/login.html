@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Sign up</title>
+
+        <style>
+            body {
+                position: relative;
+                left: 0vw;
+                top: 0vh;
+                
+                width: 100vw;
+                height: 100vh;
+
+                margin: 0;
+                padding: 0;
+
+                background: radial-gradient(rgb(19, 19, 20), rgb(8, 2, 45));
+            }
+
+            .panel {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                translate: -50% -50%;
+
+                width: 400px;
+                height: fit-content;
+
+                padding: 0;
+                padding-top: 40px;
+                padding-bottom: 40px;
+                /* padding-right: 20px;
+                padding-left: 20px; */
+
+                background-color: rgb(15, 27, 41);
+                border: 2px solid rgb(30, 70, 150);
+
+                border-radius: 20px;
+
+                display: flex;
+                flex-direction: column;
+
+                align-content: center;
+                justify-content: center;
+            }
+
+            .title {
+                position: relative;
+                left: 10%;
+
+                width: 80%;
+                height: fit-content;
+
+                margin-bottom: 20px;
+
+                text-align: center;
+                font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+                font-size: 50px;
+                font-weight: bold;
+                color: rgb(210, 210, 210);
+            }
+
+            .panel > input {
+                position: relative;
+                left: 50%;
+                translate: -50% 0%;
+
+                width: 70%;
+                height: 30px;
+
+                margin: 0;
+                margin-top: 10px;
+                margin-bottom: 0px;
+                padding: 0;
+                padding-left: 10px;
+                padding-right: 10px;
+                padding-top: 5px;
+                padding-bottom: 5px;
+
+                background-color: rgb(7, 19, 46);
+
+                border: 1px solid rgb(30, 70, 150);
+                outline: none;
+                border-radius: 10px;
+
+                color: rgb(163, 221, 233);
+                font-family: Arial, Helvetica, sans-serif;
+
+                transition: all 200ms ease-in-out;
+            }
+
+            .panel > input:hover {
+                background-color: rgb(12, 32, 78);
+                border: 1px solid rgb(70, 118, 213);
+                outline: none;
+            }
+
+            .panel > input:focus,
+            .panel > input:active {
+                background-color: rgb(9, 25, 61);
+                border: 1px solid rgb(70, 118, 213);
+                outline: none;
+            }
+
+            .message {
+                position: relative;
+                left: 10%;
+
+                width: 80%;
+                height: fit-content;
+
+                color: rgb(150, 150, 150);
+                text-align: center;
+                font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+            }
+
+            .message[error] {
+                color: rgb(236, 46, 46);
+            }
+
+            .panel > button {
+                position: relative;
+                left: 50%;
+                translate: -50% 0%;
+
+                width: fit-content;
+                height: fit-content;
+
+                background-color: rgb(7, 26, 72);
+                border: rgb(30, 70, 150) 1px solid;
+                border-radius: 10px;
+
+                padding: 10px;
+                padding-left: 20px;
+                padding-right: 20px;
+                margin: 0;
+                margin-top: 20px;
+
+                color: rgb(159, 245, 235);
+                font-size: 20px;
+                font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+
+                transition: all 200ms ease-in-out;
+            }
+
+            .panel > button:hover {
+                color: rgb(159, 245, 235);
+                background-color: rgb(20, 65, 76);
+                border: rgb(111, 154, 239) 1px solid;
+            }
+
+            .panel > button:active {
+                color: rgb(159, 245, 235);
+                background-color: rgb(17, 38, 81);
+                border: rgb(111, 154, 239) 1px solid;
+            }
+
+            .panel > button:focus-visible {
+                outline: 2px solid rgb(111, 154, 239);
+                outline-offset: 2px;
+            }
+
+            .panel > button:focus {
+                outline: none;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- MRUA - MasterRyped User Authentication -->
+
+        <div class="panel">
+            <div class="title">Log In</div>
+            <div class="message">Log in to access your Account</div>
+            <input type="text" name="username" id="username" class="username" placeholder="Username">
+            <input type="password" name="password" id="password" class="password" placeholder="Password">
+            <button type="button" class="login-button">Log In</button>
+            <button type="button" class="signup-button" onclick="location.href = '/signup.html'">Sign Up</button>
+        </div>
+
+    </body>
+    <script src="global.js"></script>
+    <script>
+        const usernameIn = document.querySelector(".username");
+        const passwordIn = document.querySelector(".password");
+        const loginBttn = document.querySelector(".login-button");
+        const messageEl = document.querySelector(".message");
+
+        let token = ""; // Token Global Variable
+
+        async function hashMessage(message) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+
+            // Convert buffer to hex string
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        function setMessage (message, error = false) {
+            messageEl.innerText = message;
+
+            if (error)
+                messageEl.setAttribute("error", "");
+            else if (messageEl.hasAttribute("error"))
+                messageEl.removeAttribute("error");
+        }
+
+        async function validUsername (username) {
+            if (username.length < 3) return "length";
+            if (!(/^[a-zA-Z][\w-]+$/).test(username)) return "invalid";
+
+            try {
+                const response = await fetch(`${AUTH_HOSTNAME}/username`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "ngrok-skip-browser-warning": "true"
+                    },
+                    body: JSON.stringify({ username: username })
+                });
+
+                const data = await response.json();
+                console.log("Response from server (username):", data);
+
+                if (data.message === "new") return "success";
+                if (data.message === "old") return "taken";
+                
+            } catch (err) {
+                console.error(`Error sending username: ${username}\n`, err);
+                return "error";
+            }
+        }
+
+        function validPassword (password) {
+            let passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
+
+            return passwordRegex.test(password);
+        }
+
+        async function sendUser (user) {
+            try {
+                const response = await fetch(`${AUTH_HOSTNAME}/login`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "ngrok-skip-browser-warning": "true"
+                    },
+                    body: JSON.stringify(user)
+                });
+
+                const data = await response.json();
+                console.log("Response from server (user):", data);
+
+                if (data.message === "success") {
+                    token = data.token;
+                    return "success";
+                }
+                else if (data.message === "tmreq") {
+                    return "tmreq " + data.retryAfter;
+                }
+                if (data.message === "password") return "password";
+                
+            } catch (err) {
+                console.error(`Error sending user: ${user.username}\n`, err);
+                return "error";
+            }
+        }
+
+        loginBttn.addEventListener(
+            "click",
+            async () => {
+                const username = usernameIn.value.trim();
+                const password = passwordIn.value.trim();
+
+                if (username === "") {
+                    setMessage("Enter a Username", true);
+                    return;
+                }
+
+                if (password === "") {
+                    setMessage("Enter a Password", true);
+                    return;
+                }
+
+                let vun = await validUsername(username);
+                if (vun !== "taken") {
+                    setMessage("Invalid Username", true);
+                    return;
+                }
+                
+                let vp = validPassword(password);
+                if (!vp) {
+                    setMessage("Invalid Password", true);
+                    return;
+                }
+
+                setMessage("Logging you in", false);
+
+                let sendingUser = await sendUser(
+                    {
+                        username: username,
+                        password: await hashMessage(password)
+                    }
+                );
+
+                if (sendingUser === "success") {
+                    // Set Token to Session Storage
+                    console.log("Token: " + token);
+                    sessionStorage.setItem("token", token);
+
+                    location.href = "/dashboard.html";
+                    return;
+                }
+                else if (sendingUser.startsWith("tmreq")) {
+                    setMessage(`Too many attempts. Try after ${sendingUser.split(" ")[1]} seconds.`);
+                }
+                else if (sendingUser === "password") {
+                    setMessage("Invalid Password");
+                    return;
+                }
+                else {
+                    setMessage("Error logging you in", true);
+                    return;
+                }
+
+            }
+        );
+    </script>
+</html>

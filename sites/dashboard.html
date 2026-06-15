@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Dashboard</title>
+
+        <style>
+            body {
+                position: relative;
+                left: 0vw;
+                top: 0vh;
+                
+                width: 100vw;
+                height: 100vh;
+
+                margin: 0;
+                padding: 0;
+
+                background: radial-gradient(rgb(19, 19, 20), rgb(8, 2, 45));
+            }
+
+            .panel {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                translate: -50% -50%;
+
+                width: 80%;
+                height: fit-content;
+
+                padding: 0;
+                padding-top: 40px;
+                padding-bottom: 40px;
+                /* padding-right: 20px;
+                padding-left: 20px; */
+
+                background-color: rgb(15, 27, 41);
+                border: 2px solid rgb(30, 70, 150);
+
+                border-radius: 20px;
+
+                display: flex;
+                flex-direction: column;
+
+                align-content: center;
+                justify-content: center;
+            }
+
+            .title {
+                position: relative;
+                left: 10%;
+
+                width: 80%;
+                height: fit-content;
+
+                margin-bottom: 10px;
+                margin-top: 10px;
+
+                text-align: left;
+                font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+                font-size: 25px;
+                font-weight: bold;
+                color: rgb(210, 210, 210);
+            }
+
+            .panel > button {
+                position: relative;
+                left: 50%;
+                translate: -50% 0%;
+
+                width: fit-content;
+                height: fit-content;
+
+                background-color: rgb(7, 26, 72);
+                border: rgb(30, 70, 150) 1px solid;
+                border-radius: 10px;
+
+                padding: 10px;
+                padding-left: 20px;
+                padding-right: 20px;
+                margin: 0;
+                margin-top: 20px;
+
+                color: rgb(159, 245, 235);
+                font-size: 20px;
+                font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+
+                transition: all 200ms ease-in-out;
+            }
+
+            .panel > button:hover {
+                color: rgb(159, 245, 235);
+                background-color: rgb(20, 65, 76);
+                border: rgb(111, 154, 239) 1px solid;
+            }
+
+            .panel > button:active {
+                color: rgb(159, 245, 235);
+                background-color: rgb(17, 38, 81);
+                border: rgb(111, 154, 239) 1px solid;
+            }
+
+            .panel > button:focus-visible {
+                outline: 2px solid rgb(111, 154, 239);
+                outline-offset: 2px;
+            }
+
+            .panel > button:focus {
+                outline: none;
+            }
+        </style>
+    </head>
+    <body>
+        
+        <div class="panel">
+            <div class="title username">Username: </div>
+            <div class="title email">Email: </div>
+            <button type="button" class="delete-button">Delete Account</button>
+        </div>
+        
+    </body>
+    <script src="global.js"></script>
+    <script>
+        const usernameEl = document.querySelector(".username");
+        const emailEl = document.querySelector(".email");
+        const deleteBttn = document.querySelector(".delete-button");
+
+        async function getUserData () {
+            let token = sessionStorage.getItem("token");
+            
+            console.log(token);
+    
+            if (token) {
+                try {
+                    const response = await fetch(`${AUTH_HOSTNAME}/user-data`, {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authentication": `Bearer ${token}`,
+                            "ngrok-skip-browser-warning": "true"
+                        },
+                    });
+        
+                    const data = await response.json();
+                    console.log("Response from server (user):", data);
+        
+                    if (data.message === "success") {
+                        return data;
+                    }
+                    else if (data.message === "invalid") {
+                        return "invalid";
+                    }
+                    else if (data.message === "error") {
+                        return "error";
+                    }
+                    
+                } catch (err) {
+                    console.error(`Error: `, err);
+                    return "error";
+                }
+            }
+            else {
+                return "invalid";
+            }
+        }
+
+        async function deleteUser () {
+            let token = sessionStorage.getItem("token");
+            
+            console.log(token);
+    
+            if (token) {
+                try {
+                    const response = await fetch(`${AUTH_HOSTNAME}/delete-user`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authentication": `Bearer ${token}`,
+                            "ngrok-skip-browser-warning": "true"
+                        },
+                    });
+        
+                    const data = await response.json();
+                    console.log("Response from server (user):", data);
+        
+                    if (data.message === "deleted") {
+                        return "success";
+                    }
+                    else if (data.message === "invalid") {
+                        return "invalid";
+                    }
+                    else if (data.message === "error") {
+                        return "error";
+                    }
+                    
+                } catch (err) {
+                    console.error(`Error: `, err);
+                    return "error";
+                }
+            }
+            else {
+                return "invalid";
+            }
+        }
+
+        (async () => {
+            const userData = await getUserData();
+
+            if (userData === "invalid") {
+                location.href = "/login.html";
+                return;
+            }
+            else if (userData === "error") return;
+
+            usernameEl.innerText = "Username: " + userData.data.username;
+            emailEl.innerText = "Email: " + userData.data.email;
+        })();
+
+        deleteBttn.addEventListener(
+            "click",
+            async () => {
+                const retData = await deleteUser();
+
+                if (retData === "success") {
+                    alert("Account deleted successfully.");
+                    location.href = "/signup.html";
+                    return;
+                }
+                if (retData === "invalid") {
+                    alert("Token Invalid. Please Login again.");
+                    location.href = "/login.html";
+                    return;
+                }
+                if (retData === "error") {
+                    console.error("Error");
+                    return;
+                }
+            }
+        );
+    </script>
+</html>
